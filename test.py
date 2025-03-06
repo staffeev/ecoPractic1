@@ -4,9 +4,10 @@ import random
 
 # Определение параметров
 CELL_SIZE = 10  # Размер клетки
-GRID_SIZE = (80, 60)  # Размер сетки (ширина, высота)
+GRID_SIZE = (80, 80)  # Размер сетки (ширина, высота)
 WIDTH, HEIGHT = GRID_SIZE[0] * CELL_SIZE, GRID_SIZE[1] * CELL_SIZE
 FPS = 2  # Замедленная игра
+MAX_POPULATION = 10  # Максимальное количество особей в клетке
 
 # Цвета
 BLACK = (0, 0, 0)
@@ -48,11 +49,12 @@ def update_grid(grid):
     for x in range(GRID_SIZE[0]):
         for y in range(GRID_SIZE[1]):
             if grid[x, y] > 0:
-                # Увеличиваем население клетки
-                new_grid[x, y] += 1
+                # Рост популяции экспоненциально (удвоение, но с ограничением)
+                new_population = min(grid[x, y] * 2, MAX_POPULATION)
+                new_grid[x, y] = new_population
                 
                 # Чем больше животных, тем выше шанс заражения соседних клеток
-                infection_chance = min(0.1 * new_grid[x, y], 0.5)  # Максимальный шанс заражения 50%
+                infection_chance = min(0.1 * new_population, 0.5)  # Максимальный шанс заражения 50%
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     nx, ny = x + dx, y + dy
                     if 0 <= nx < GRID_SIZE[0] and 0 <= ny < GRID_SIZE[1] and new_grid[nx, ny] == 0:
