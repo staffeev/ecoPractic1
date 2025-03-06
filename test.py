@@ -4,14 +4,17 @@ import random
 
 # Определение параметров
 CELL_SIZE = 10  # Размер клетки
-GRID_SIZE = (80, 60)  # Размер сетки (ширина, высота)
+GRID_SIZE = (80, 80)  # Размер сетки (ширина, высота)
 WIDTH, HEIGHT = GRID_SIZE[0] * CELL_SIZE, GRID_SIZE[1] * CELL_SIZE
 FPS = 2  # Замедленная игра
+MAX_POPULATION = 10  # Максимальное количество особей в клетке
 
 # Цвета
 BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
+WHITE = np.array((255, 255, 255))
+# STATE_2 = np.round(WHITE * 0.66).astype(int)
+# STATE_3 = np.round(WHITE * 0.33).astype(int)
+# STATE_4 = np.round(WHITE * 0).astype(int)
 # Инициализация Pygame
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -31,9 +34,9 @@ def draw_grid(surface, grid):
     for x in range(GRID_SIZE[0]):
         for y in range(GRID_SIZE[1]):
             if grid[x, y] > 0:
-                pygame.draw.rect(surface, BLACK, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-                text = font.render(str(grid[x, y]), True, WHITE)
-                surface.blit(text, (x * CELL_SIZE + 2, y * CELL_SIZE + 2))
+                pygame.draw.rect(surface, np.round(WHITE * (MAX_POPULATION - grid[x, y]) / MAX_POPULATION).astype(int), (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+                # text = font.render(str(grid[x, y]), True, WHITE)
+                # surface.blit(text, (x * CELL_SIZE + 2, y * CELL_SIZE + 2))
 
 def count_neighbors(grid, x, y):
     neighbors = 0
@@ -48,11 +51,12 @@ def update_grid(grid):
     for x in range(GRID_SIZE[0]):
         for y in range(GRID_SIZE[1]):
             if grid[x, y] > 0:
-                # Увеличиваем население клетки
-                new_grid[x, y] += 1
+                # Рост популяции экспоненциально (удвоение, но с ограничением)
+                new_population = min(grid[x, y] * 2, MAX_POPULATION)
+                new_grid[x, y] = new_population
                 
                 # Чем больше животных, тем выше шанс заражения соседних клеток
-                infection_chance = min(0.1 * new_grid[x, y], 0.5)  # Максимальный шанс заражения 50%
+                infection_chance = min(0.1 * new_population, 0.5)  # Максимальный шанс заражения 50%
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     nx, ny = x + dx, y + dy
                     if 0 <= nx < GRID_SIZE[0] and 0 <= ny < GRID_SIZE[1] and new_grid[nx, ny] == 0:
