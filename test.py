@@ -11,8 +11,10 @@ MAX_POPULATION = 10  # Максимальное количество особе�
 
 # Цвета
 BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-
+WHITE = np.array((255, 255, 255))
+# STATE_2 = np.round(WHITE * 0.66).astype(int)
+# STATE_3 = np.round(WHITE * 0.33).astype(int)
+# STATE_4 = np.round(WHITE * 0).astype(int)
 # Инициализация Pygame
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -32,9 +34,9 @@ def draw_grid(surface, grid):
     for x in range(GRID_SIZE[0]):
         for y in range(GRID_SIZE[1]):
             if grid[x, y] > 0:
-                pygame.draw.rect(surface, BLACK, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-                text = font.render(str(grid[x, y]), True, WHITE)
-                surface.blit(text, (x * CELL_SIZE + 2, y * CELL_SIZE + 2))
+                pygame.draw.rect(surface, np.round(WHITE * (MAX_POPULATION - grid[x, y]) / MAX_POPULATION).astype(int), (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+                # text = font.render(str(grid[x, y]), True, WHITE)
+                # surface.blit(text, (x * CELL_SIZE + 2, y * CELL_SIZE + 2))
 
 def count_neighbors(grid, x, y):
     neighbors = 0
