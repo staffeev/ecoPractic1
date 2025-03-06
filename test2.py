@@ -11,20 +11,34 @@ MAX_POPULATION = 10  # Максимальное количество особе�
 
 # Цвета
 BLACK = (0, 0, 0)
-WHITE = np.array((255, 255, 255))
-# STATE_2 = np.round(WHITE * 0.66).astype(int)
-# STATE_3 = np.round(WHITE * 0.33).astype(int)
-# STATE_4 = np.round(WHITE * 0).astype(int)
+WHITE = (255, 255, 255)
+
 # Инициализация Pygame
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Эволюция животных")
 clock = pygame.time.Clock()
 font = pygame.font.Font(None, 14)  # Шрифт для текста
 
 # Загрузка фонового изображения
-background = pygame.image.load("map1.jpg")  # Укажите путь к вашему изображению
+background = pygame.image.load("background.png")
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
+
+# Создание карты барьеров
+barriers = np.zeros(GRID_SIZE, dtype=int)
+background_surface = pygame.surfarray.array3d(background)
+background_surface = background_surface.transpose(1, 0, 2)  # Транспонируем для соответствия координат
+
+for x in range(GRID_SIZE[0]):
+    for y in range(GRID_SIZE[1]):
+        px = min(x * CELL_SIZE, WIDTH - 1)
+        py = min(y * CELL_SIZE, HEIGHT - 1)
+        r, g, b = background_surface[px, py]
+        brightness = (r + g + b) / 3  # Яркость пикселя
+        print(brightness)
+        barriers[x, y] = 1 if brightness < 40 else 0  # Предполагаем, что океан тёмный
+
+
+print(barriers)
 
 def generate_grid(size):
     return np.zeros(size, dtype=int)
@@ -34,17 +48,9 @@ def draw_grid(surface, grid):
     for x in range(GRID_SIZE[0]):
         for y in range(GRID_SIZE[1]):
             if grid[x, y] > 0:
-                pygame.draw.rect(surface, np.round(WHITE * (MAX_POPULATION - grid[x, y]) / MAX_POPULATION).astype(int), (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
-                # text = font.render(str(grid[x, y]), True, WHITE)
-                # surface.blit(text, (x * CELL_SIZE + 2, y * CELL_SIZE + 2))
-
-def count_neighbors(grid, x, y):
-    neighbors = 0
-    for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:  # Только горизонтальные и вертикальные соседи
-        nx, ny = x + dx, y + dy
-        if 0 <= nx < GRID_SIZE[0] and 0 <= ny < GRID_SIZE[1]:
-            neighbors += grid[nx, ny]
-    return neighbors
+                pygame.draw.rect(surface, BLACK, (x * CELL_SIZE, y * CELL_SIZE, CELL_SIZE, CELL_SIZE))
+                text = font.render(str(grid[x, y]), True, WHITE)
+                surface.blit(text, (x * CELL_SIZE + 2, y * CELL_SIZE + 2))
 
 def update_grid(grid):
     new_grid = grid.copy()
@@ -59,7 +65,8 @@ def update_grid(grid):
                 infection_chance = min(0.1 * new_population, 0.5)  # Максимальный шанс заражения 50%
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     nx, ny = x + dx, y + dy
-                    if 0 <= nx < GRID_SIZE[0] and 0 <= ny < GRID_SIZE[1] and new_grid[nx, ny] == 0:
+                    if (0 <= nx < GRID_SIZE[0] and 0 <= ny < GRID_SIZE[1] 
+                            and new_grid[nx, ny] == 0 and barriers[nx, ny] == 0):
                         if random.random() < infection_chance:
                             new_grid[nx, ny] = 1  # Заражаем соседнюю клетку
     return new_grid
@@ -84,7 +91,8 @@ while running:
                 next_step = True
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = pygame.mouse.get_pos()
-            grid[x // CELL_SIZE, y // CELL_SIZE] = 1  # Населяем клетку
+            if barriers[x // CELL_SIZE, y // CELL_SIZE] == 0:
+                grid[x // CELL_SIZE, y // CELL_SIZE] = 1  # Населяем клетку, если нет барьера
     
     if simulating or next_step:
         grid = update_grid(grid)
