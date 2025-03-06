@@ -26,6 +26,9 @@ font = pygame.font.Font(None, 14)  # Шрифт для текста
 background = pygame.image.load("map1.jpg")  # Укажите путь к вашему изображению
 background = pygame.transform.scale(background, (WIDTH, HEIGHT))
 
+WIND = [(-1, 0), (1, 0), (0, -1), (0, 1)][random.randrange(4)]
+WIND_AMP = 0.4
+print(WIND)
 def generate_grid(size):
     return np.zeros(size, dtype=int)
 
@@ -60,6 +63,11 @@ def update_grid(grid):
                 for dx, dy in [(-1, 0), (1, 0), (0, -1), (0, 1)]:
                     nx, ny = x + dx, y + dy
                     if 0 <= nx < GRID_SIZE[0] and 0 <= ny < GRID_SIZE[1] and new_grid[nx, ny] == 0:
+                        if (dx, dy) == WIND:
+                            infection_chance += WIND_AMP
+                            # print(infection_chance)
+                        if (dx, -dy) == WIND or (-dx, dy) == WIND:
+                            infection_chance = max(infection_chance - WIND_AMP, 0)
                         if random.random() < infection_chance:
                             new_grid[nx, ny] = 1  # Заражаем соседнюю клетку
     return new_grid
